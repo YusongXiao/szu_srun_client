@@ -52,7 +52,7 @@ def l(a: list[int], b: bool):
 
 
 def encode(str_: str, key: str) -> str:
-    """srun 发明的一种莫名奇妙的加密方式"""
+    """xxtea 加密"""
     import math
     str_, key = String(str_), String(key)
 

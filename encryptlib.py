@@ -54,10 +54,9 @@ def trans_b64encode(s: str, alpha: Union[str, None] = None) -> str:
 
 
 def info_(info: dict, token: str) -> str:
-    import json
-    from srencode import encode
+    import json, xxtea
     alpha = 'LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA'
     json_data = json.dumps(info).replace(' ', '')
-    result = trans_b64encode(encode(json_data, token), alpha)
+    result = trans_b64encode(xxtea.encode(json_data, token), alpha)
     return f"{{SRBX1}}{result}"
 
