@@ -1,6 +1,7 @@
 import time
 import json
 import requests
+import sys
 from typing import Union
 from enum import Enum
 from urllib.parse import urlencode
@@ -9,6 +10,11 @@ from encryptlib import sha1
 from encryptlib import chkstr
 from encryptlib import info_
 
+
+version = sys.version_info
+if version < (3, 0):
+    print('The current version is not supported, you need to use python3')
+    sys.exit()
 
 # rad_user_info: 获取用户信息的地址
 # get_challenge: 获取加密 token 的地址
@@ -29,6 +35,13 @@ TYPE = "1"
 N = "200"
 ENC = 'srun_bx1'
 ACID = "12"
+
+BANNER = """
+   ________  __  __  ____                ________          __ 
+  / __/_  / / / / / / __/_____ _____    / ___/ (_)__ ___  / /_
+ _\ \  / /_/ /_/ / _\ \/ __/ // / _ \  / /__/ / / -_) _ \/ __/
+/___/ /___/\____/ /___/_/  \_,_/_//_/  \___/_/_/\__/_//_/\__/ 
+"""
 
 
 class Mode(Enum):
@@ -248,10 +261,7 @@ def login():
 
 
 if __name__ == "__main__":
-    from banner import banner
-
-    banner()
-    
+    print(BANNER)
     print("[1]登录 [2]登出 [other]退出")
     mode = input("[+] 请选择工作模式: ")
     if mode == Mode.Login.value:
@@ -260,4 +270,3 @@ if __name__ == "__main__":
         logout()
     else:
         print("[*] BYE")
-

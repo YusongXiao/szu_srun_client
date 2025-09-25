@@ -64,7 +64,7 @@ def encode(str_: str, key: str) -> str:
     n = len(v) - 1
     z = v[n]
     y = v[0]
-    c = 0x86014019 | 0x183639A0
+    c = 0x9e3779b9
     m = 0
     e = 0
     p = 0
@@ -72,7 +72,7 @@ def encode(str_: str, key: str) -> str:
     d = 0
 
     while 0 < q:
-        d = d + c & (0x8CE0D9BF | 0x731F2640)
+        d = d + c & 0xffffffff
         e = d >> 2 & 3
         p = 0
         while p < n:
@@ -80,13 +80,12 @@ def encode(str_: str, key: str) -> str:
             m = z >> 5 ^ y << 2
             m += y >> 3 ^ z << 4 ^ (d ^ y)
             m += k[p & 3 ^ e] ^ z
-            z = v[p] = v[p] + m & (0xEFB8D130 | 0x10472ECF)
+            z = v[p] = v[p] + m & 0xffffffff
             p += 1
         y = v[0]
         m = z >> 5 ^ y << 2
         m += y >> 3 ^ z << 4 ^ (d ^ y)
         m += k[p & 3 ^ e] ^ z
-        z = v[n] = v[n] + m & (0xBB390742 | 0x44C6F8BD)
+        z = v[n] = v[n] + m & 0xffffffff
         q -= 1
-    
     return l(v, False)
