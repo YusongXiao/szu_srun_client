@@ -6,3 +6,5 @@ test*
 .vscode/
 .DS_Store
 .idea/
+srunClient
+main

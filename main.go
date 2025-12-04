@@ -220,46 +220,9 @@ func srunPortalLogin(callback, username, password, path, token, ip, os string) b
 	return true
 }
 
-func srunPortalLogout(callback, username, ip, path string) {
-	client := http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest("GET", path, nil)
-	if err != nil {
-		return
-	}
-	var logoutQueryParams = map[string]string{
-		"action":   "logout",
-		"callback": callback,
-		"username": username,
-		"ip":       ip,
-	}
-	query := req.URL.Query()
-	for k, v := range logoutQueryParams {
-		query.Add(k, v)
-	}
-	req.URL.RawQuery = query.Encode()
-	resp, err := client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		fmt.Println("[*] 登出失败")
-		return
-	}
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
-	var respJson srunPortalRes
-	err = json.Unmarshal(body[len(callback)+1:len(body)-1], &respJson)
-	if err != nil || respJson.Res != "ok" {
-		fmt.Println("[*] 登出失败")
-		return
-	}
-	fmt.Println("[*] 登出成功")
-}
-
 func login() {
 	// 从环境变量读取学号与密码
 	username := os.Getenv("username")
-	if username == "" {
-		// 兼容用户可能的输入拼写
-		username = os.Getenv("userneme")
-	}
 	if username == "" {
 		username = os.Getenv("SRUN_USERNAME")
 	}
@@ -269,7 +232,7 @@ func login() {
 	}
 
 	if username == "" || passwordStr == "" {
-		fmt.Println("[!] 环境变量 username/SRUN_USERNAME 或 password/SRUN_PASSWORD 未设置")
+		fmt.Println("[!] 环境变量 username 或 password 未设置")
 		return
 	}
 
