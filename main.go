@@ -40,9 +40,6 @@ const (
 	ENC  string = "srun_bx1"
 	ACID string = "12"
 	//
-	ModeLogin  = "1"
-	ModeLogout = "2"
-	//
 	httpErrorMessage = `[!] 访问 %s 的过程中出现网络问题, 请检查:
 1. 网络环境是否正常
 2. 配置的 URL 是否正确
@@ -258,10 +255,21 @@ func srunPortalLogout(callback, username, ip, path string) {
 
 func login() {
 	// 从环境变量读取学号与密码
-	username := os.Getenv("SRUN_USERNAME")
-	passwordStr := os.Getenv("SRUN_PASSWORD")
+	username := os.Getenv("username")
+	if username == "" {
+		// 兼容用户可能的输入拼写
+		username = os.Getenv("userneme")
+	}
+	if username == "" {
+		username = os.Getenv("SRUN_USERNAME")
+	}
+	passwordStr := os.Getenv("password")
+	if passwordStr == "" {
+		passwordStr = os.Getenv("SRUN_PASSWORD")
+	}
+
 	if username == "" || passwordStr == "" {
-		fmt.Println("[!] 环境变量 SRUN_USERNAME 或 SRUN_PASSWORD 未设置")
+		fmt.Println("[!] 环境变量 username/SRUN_USERNAME 或 password/SRUN_PASSWORD 未设置")
 		return
 	}
 
@@ -311,35 +319,7 @@ func login() {
 	select {}
 }
 
-func logout() {
-	var username string
-	fmt.Print("[+] 请输入您的学号: ")
-	fmt.Scanln(&username)
-	ip, err := getIp(callback, targets["rad_user_info"])
-	if err != nil {
-		fmt.Println("获取 IP 失败, 请检查配置的 URL")
-		return
-	}
-	srunPortalLogout(callback, username, ip, targets["srun_portal"])
-}
-
 func main() {
 	fmt.Println(Banner)
-	// 自动模式：容器中运行时可设置 SRUN_AUTO_LOGIN=1 来直接登录并保持运行
-	if os.Getenv("SRUN_AUTO_LOGIN") == "1" {
-		login()
-		return
-	}
-	var mode string
-	fmt.Println("[1]登录 [2]登出 [other]退出")
-	fmt.Print("[+] 请选择工作模式: ")
-	fmt.Scanln(&mode)
-	switch mode {
-	case ModeLogin:
-		login()
-	case ModeLogout:
-		logout()
-	default:
-		fmt.Println("[*] BYE")
-	}
+	login()
 }
