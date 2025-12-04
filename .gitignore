@@ -2,3 +2,7 @@
 *.pyc
 test*
 **/bin
+*.exe
+.vscode/
+.DS_Store
+.idea/
