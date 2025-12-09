@@ -21,7 +21,7 @@
 使用以下命令启动容器：
 
 ```bash
-docker run --env username=你的学号 --env password=你的密码 --name srunclient --restart=always -d ccr.ccs.tencentyun.com/songhappy/srunclient
+docker run --env username=你的学号 --env password=你的密码 --name srunclient --restart=always --network host -d ccr.ccs.tencentyun.com/songhappy/srunclient
 ```
 
 ### 参数说明
@@ -29,4 +29,6 @@ docker run --env username=你的学号 --env password=你的密码 --name sruncl
 *   `--env username=...`: 设置你的学号。
 *   `--env password=...`: 设置你的密码。
 *   `--restart=always`: 设置容器自动重启，保证开机自启和崩溃重启。
+*   `--network host`: 主机网络模式。
 *   `-d`: 后台运行。
+
