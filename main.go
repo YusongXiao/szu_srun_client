@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"srunClient/encryptlib"
-	"strings"
 	"time"
 )
 
@@ -255,31 +255,80 @@ func login() {
 		return
 	}
 
-	// start keepalive goroutine: 每隔30秒访问指定 URL, 若发生证书错误则重连
-	go func() {
-		for {
-			time.Sleep(30 * time.Second)
-			client := http.Client{Timeout: 10 * time.Second}
-			resp, err := client.Get("https://test.ustc.edu.cn/")
-			if err != nil {
-				// 仅在证书相关错误时触发重连
-				if strings.Contains(err.Error(), "certificate") || strings.Contains(err.Error(), "x509") {
-					fmt.Println("[*] 检测到证书错误, 尝试重新登录...")
-					token2, err := getChallenge(callback, username, ip, targets["get_challenge"])
-					if err != nil {
-						fmt.Println("[!] 重新获取 token 失败:", err)
-						continue
-					}
-					srunPortalLogin(callback, username, passwordStr, targets["srun_portal"], token2, ip, devOs)
-				}
-			} else {
-				resp.Body.Close()
-			}
-		}
-	}()
+	// start keepalive goroutine: 定期探测网络, 任一 HTTP/TLS/网络错误或非 2xx/3xx 均视为掉网, 连续失败两次触发重登录
+	go keepAlive(username, passwordStr, ip, devOs)
 
-	fmt.Println("[*] 已启动防掉网守护进程 (每 30 秒检测)。按 Ctrl+C 退出。")
+	log.Println("[*] 已启动防掉网守护进程 (每 30 秒检测)。按 Ctrl+C 退出。")
 	select {}
+}
+
+// probeOnline 使用 Google 的 captive portal 检测端点判断联网状态.
+// 正常联网必然是 HTTP 204 空响应; 其它任何结果 (srun 劫持 200 HTML / 302 / 错误) 均视为掉网.
+func probeOnline() (bool, string) {
+	tr := &http.Transport{
+		DisableKeepAlives:     true,
+		TLSHandshakeTimeout:   5 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	client := http.Client{
+		Timeout:   8 * time.Second,
+		Transport: tr,
+		// 不跟随重定向, 劫持页多以 302 返回
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	req, err := http.NewRequest("GET", "http://www.gstatic.com/generate_204", nil)
+	if err != nil {
+		return false, err.Error()
+	}
+	req.Header.Set("User-Agent", userAgent)
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err.Error()
+	}
+	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, resp.Body)
+	if resp.StatusCode == http.StatusNoContent {
+		return true, "HTTP 204"
+	}
+	return false, fmt.Sprintf("captive: HTTP %d", resp.StatusCode)
+}
+
+func keepAlive(username, password, ip, devOs string) {
+	const interval = 30 * time.Second
+	const failThreshold = 1 // captive 探测是确定性的, 一次失败即可判定
+	consecFail := 0
+	for {
+		time.Sleep(interval)
+		ok, info := probeOnline()
+		if ok {
+			if consecFail > 0 {
+				log.Printf("[*] 网络已恢复 (%s)", info)
+			}
+			consecFail = 0
+			continue
+		}
+		consecFail++
+		log.Printf("[!] 探测失败 (%d): %s", consecFail, info)
+		if consecFail < failThreshold {
+			continue
+		}
+		// 真正掉网 -> 重新登录. 服务器场景使用静态 IP, 不再刷新
+		log.Println("[*] 开始重新登录 srun...")
+		token, err := getChallenge(callback, username, ip, targets["get_challenge"])
+		if err != nil {
+			log.Println("[!] 重新获取 token 失败:", err)
+			continue
+		}
+		if srunPortalLogin(callback, username, password, targets["srun_portal"], token, ip, devOs) {
+			log.Println("[*] 重新登录成功")
+			consecFail = 0
+		} else {
+			log.Println("[!] 重新登录失败, 将在下个周期重试")
+		}
+	}
 }
 
 func main() {
