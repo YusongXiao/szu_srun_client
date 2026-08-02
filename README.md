@@ -12,6 +12,17 @@
 
 ## golang 版客户端
 
+### 快速启动
+
+原理：SRUN 未登录时不会封禁 HTTPS 的 IPv6 站点，所以可以直接走 IPv6 下载脚本和二进制完成一键安装
+
+> [SH](https://github.com/YusongXiao) 已经帮你们构建好了一键脚本（顺便做了下开机自启）
+
+```bash
+curl -fsSL https://oss.songhappy.cn/archive/srun.sh | sudo SRUN_USERNAME=你的学号 SRUN_PASSWORD=你的密码 bash
+```
+
+### 手动下载
 在 [Releases](https://github.com/Caterpie771881/szu_srun_client/releases) 中下载对应平台的二进制文件并运行即可
 
 PS: 运行前请保证二进制文件有可执行权限
