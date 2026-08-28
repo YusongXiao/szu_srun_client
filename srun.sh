@@ -83,13 +83,25 @@ prompt_nonempty() {
 }
 
 resolve_credentials() {
+	# Preserve credentials supplied for this run before loading the existing
+	# configuration.  Older versions of the installer may have stored the
+	# uppercase SRUN_* names in ENV_FILE, which must not overwrite a requested
+	# account change.
+	local requested_username="${SRUN_USERNAME:-}"
+	local requested_password="${SRUN_PASSWORD:-}"
+	local saved_username=""
+	local saved_password=""
+
 	if [[ -f "$ENV_FILE" ]]; then
+		unset username password SRUN_USERNAME SRUN_PASSWORD
 		# shellcheck disable=SC1090
 		. "$ENV_FILE"
+		saved_username="${username:-${SRUN_USERNAME:-}}"
+		saved_password="${password:-${SRUN_PASSWORD:-}}"
 	fi
 
-	USERNAME="${SRUN_USERNAME:-${username:-}}"
-	PASSWORD="${SRUN_PASSWORD:-${password:-}}"
+	USERNAME="${requested_username:-$saved_username}"
+	PASSWORD="${requested_password:-$saved_password}"
 
 	if [[ -z "$USERNAME" ]]; then
 		USERNAME="$(prompt_nonempty '请输入校园网账号: ' no)"
@@ -167,7 +179,7 @@ show_summary() {
 安装完成。
 
 首次和后续都可以使用同一条命令：
-curl -fsSL $SCRIPT_URL | sudo bash
+curl -fsSL $SCRIPT_URL | sudo env SRUN_USERNAME=你的学号 SRUN_PASSWORD=你的密码 bash
 
 常用命令：
 	启动服务: sudo systemctl start $SERVICE_NAME
@@ -192,4 +204,6 @@ main() {
 	show_summary
 }
 
-main "$@"
+if [[ -z "${BASH_SOURCE[0]:-}" || "${BASH_SOURCE[0]}" == "$0" ]]; then
+	main "$@"
+fi

@@ -15,7 +15,7 @@
 SRUN 未登录时不会封禁 HTTPS 的 IPv6 站点，所以才可以直接走 IPv6 下载脚本完成一键安装。
 
 ```bash
-curl -fsSL https://oss.songhappy.cn/archive/srun.sh | sudo SRUN_USERNAME=你的学号 SRUN_PASSWORD=你的密码 bash
+curl -fsSL https://oss.songhappy.cn/archive/srun.sh | sudo env SRUN_USERNAME=你的学号 SRUN_PASSWORD=你的密码 bash
 ```
 
 或：
@@ -39,7 +39,7 @@ sudo journalctl -u srun-client -f
 重新执行时还是同一条命令：
 
 ```bash
-curl -fsSL https://oss.songhappy.cn/archive/srun.sh | sudo SRUN_USERNAME=你的学号 SRUN_PASSWORD=你的密码 bash
+curl -fsSL https://oss.songhappy.cn/archive/srun.sh | sudo env SRUN_USERNAME=你的学号 SRUN_PASSWORD=你的密码 bash
 ```
 
 ## 从源码安装版
@@ -63,4 +63,3 @@ docker run --env username=你的学号 --env password=你的密码 --name sruncl
 *   `--restart=always`: 设置容器自动重启，保证开机自启和崩溃重启。
 *   `--network host`: 主机网络模式。
 *   `-d`: 后台运行。
-
