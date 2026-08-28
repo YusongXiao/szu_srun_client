@@ -42,6 +42,15 @@ sudo journalctl -u srun-client -f
 curl -fsSL https://oss.songhappy.cn/archive/srun.sh | sudo env SRUN_USERNAME=你的学号 SRUN_PASSWORD=你的密码 bash
 ```
 
+## 卸载
+
+```bash
+sudo systemctl disable --now srun-client
+sudo rm -f /etc/systemd/system/srun-client.service /etc/default/srun-client /opt/srun-client/srunClient
+sudo rmdir /opt/srun-client 2>/dev/null || true
+sudo systemctl daemon-reload
+```
+
 ## 从源码安装版
 
 IPv6 不可达时，直接使用 Python3 版本：
